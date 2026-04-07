@@ -8,6 +8,7 @@
 sa-token-quickstart/
 ├── sa-token-basic/          # 基础示例模块
 ├── sa-token-elegant-demo/   # 优雅实践模块
+├── sa-token-apikey/         # API Key 管理模块
 └── pom.xml                  # 父POM
 ```
 
@@ -34,21 +35,37 @@ sa-token-quickstart/
   - **在线会话管理**（查看和踢掉在线用户会话）
   - **改进的踢人功能**（支持按用户ID和会话ID踢人）
 
+### sa-token-apikey
+- **定位**: API Key 管理系统
+- **端口**: 8082
+- **特点**: 基于 Sa-Token 官方 API Key 插件的完整实现
+- **管理后台**: http://localhost:8082/
+- **默认账号**: admin / admin123
+- **包含**:
+  - API Key 创建、查询、删除
+  - API Key 认证（Bearer sk-xxx 格式）
+  - **双重限流机制**（IP 限流 + API Key 限流）
+  - API Key 使用统计
+  - Web 管理后台
+  - Redis 持久化
+- **详细文档**: [sa-token-apikey/README.md](sa-token-apikey/README.md)
+
 ## 技术栈
 
-- Spring Boot 3.2.0
-- Sa-Token 1.37.0
+- Spring Boot 3.3.0
+- Sa-Token 1.45.0
 - Java 17
 - Lombok
 - Knife4j (Swagger)
 - Testcontainers
-- Redis（可选）
+- Redis（sa-token-apikey 模块必需）
 
 ## 快速开始
 
 ### 前置要求
 - JDK 17+
 - Maven 3.6+
+- Redis 6.0+（运行 sa-token-apikey 模块需要）
 
 ### 构建项目
 ```bash
@@ -91,6 +108,28 @@ mvn spring-boot:run
 
 详细启动指南请参考 [STARTUP_GUIDE.md](STARTUP_GUIDE.md)
 
+#### 启动 API Key 管理系统
+
+**前置要求**：
+- Redis 服务必须运行
+
+```bash
+# 启动 Redis
+redis-server
+
+# 启动应用
+cd sa-token-apikey
+mvn spring-boot:run
+```
+
+访问: http://localhost:8082/
+
+默认账号：
+- 用户名：admin
+- 密码：admin123
+
+详细使用说明请参考 [sa-token-apikey/README.md](sa-token-apikey/README.md)
+
 ## 学习路径
 
 ### 1. 从基础开始
@@ -104,6 +143,13 @@ mvn spring-boot:run
 3. 理解声明式权限控制
 4. 学习统一异常处理
 5. 查看单元测试，了解测试方法
+
+### 3. API Key 管理
+1. 启动 sa-token-apikey 模块（需先启动 Redis）
+2. 登录管理后台创建 API Key
+3. 了解 API Key 认证机制
+4. 学习双重限流实现
+5. 查看使用统计功能
 
 ## 优雅实践亮点
 
