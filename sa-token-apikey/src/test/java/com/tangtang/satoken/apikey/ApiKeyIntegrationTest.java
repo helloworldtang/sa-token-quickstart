@@ -9,7 +9,6 @@ import com.tangtang.satoken.apikey.controller.AdminController;
 import com.tangtang.satoken.apikey.limiter.ApiKeyRateLimiter.ApiKeyUsageStats;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.TestMethodOrder.OrderAnnotation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -221,11 +220,11 @@ public class ApiKeyIntegrationTest {
         System.out.println("\n测试 6: 使用 API Key 获取模型列表");
 
         mockMvc.perform(get("/api/v1/models")
-                        .header("Authorization", testApiKey)
+                        .header("Authorization", testApiKey))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.data").isArray())
-                .andExpect(jsonPath("$.data.data.length()").value(3));
+                .andExpect(jsonPath("$.data.data.length").value(3));
 
         System.out.println("✓ 获取模型列表成功");
     }
