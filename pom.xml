@@ -24,6 +24,7 @@
         <module>sa-token-common</module>
         <module>sa-token-basic</module>
         <module>sa-token-elegant-demo</module>
+        <module>sa-token-apikey</module>
     </modules>
 
     <properties>
@@ -31,7 +32,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sa-token.version>1.37.0</sa-token.version>
+        <sa-token.version>1.45.0</sa-token.version>
         <knife4j.version>4.4.0</knife4j.version>
         <lombok.version>1.18.34</lombok.version>
     </properties>
@@ -42,6 +43,20 @@
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-spring-boot3-starter</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token API Key 插件 -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-apikey</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token Redis 集成 -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-redis-jackson</artifactId>
                 <version>${sa-token.version}</version>
             </dependency>
 

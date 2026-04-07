@@ -1,0 +1,30 @@
+server:
+  port: 8082
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+sa-token:
+  token-name: Authorization
+  timeout: 86400           # Session Token 有效期 24h
+  is-read-cookie: false      # 不从 Cookie 读
+  is-read-header: true       # 从 Header 读
+  is-print: false           # 关闭启动日志
+  is-log: false
+
+# ===== API Key 插件配置 =====
+apikey:
+  prefix: sk-              # API Key 格式前缀
+  timeout: 2592000         # 有效期 30 天（秒）
+  is-record-index: true    # 开启索引（查询更快）
+
+# ===== 应用配置 =====
+app:
+  admin-username: admin
+  admin-password: admin123
+  rate-limit: 60      # IP 限流：每分钟最多 60 次
+  apikey-rate-limit: 100 # API Key 限流：每分钟最多 100 次
+  apikey-daily-limit: 10000 # API Key 每日限额 10000 次

@@ -1,0 +1,30 @@
+server:
+  port: 0
+
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+sa-token:
+  token-name: Authorization
+  timeout: 86400
+  is-read-cookie: false
+  is-read-header: true
+  is-print: false
+  is-log: true
+
+# API Key 插件配置
+apikey:
+  prefix: sk-
+  timeout: 2592000
+  is-record-index: true
+
+app:
+  admin-username: admin
+  admin-password: admin123
+  rate-limit: 60
+  # 测试环境下降低限流阈值，便于测试
+  apikey-rate-limit: 20
+  apikey-daily-limit: 1000
