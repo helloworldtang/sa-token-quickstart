@@ -267,6 +267,9 @@
         .stats-value {
             font-weight: 600;
             font-size: 18px;
+            text-align: center;
+            min-width: 40px;
+            display: inline-block;
         }
 
         .toast {
@@ -500,6 +503,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>名称</th>
                             <th>API Key</th>
                             <th>状态</th>
                             <th>创建时间</th>
@@ -509,7 +513,7 @@
                     </thead>
                     <tbody id="apiKeyTable">
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 40px;">
+                            <td colspan="5" style="text-align: center; padding: 40px;">
                                 暂无 API Key
                             </td>
                         </tr>
@@ -657,7 +661,7 @@
             const table = document.getElementById('apiKeyTable');
 
             loading.classList.add('active');
-            table.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">加载中...</td></tr>';
+            table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">加载中...</td></tr>';
 
             try {
                 const response = await fetch(`${API_BASE}/admin/apikey/list`, {
@@ -672,6 +676,7 @@
                     if (data.data && data.data.length > 0) {
                         table.innerHTML = data.data.map(key => `
                             <tr>
+                                <td style="font-weight: 500; color: #333;">${key.name || '未命名'}</td>
                                 <td>
                                     <code style="background: #f3f3f3; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${maskApiKey(key.apiKey)}</code>
                                 </td>
@@ -690,14 +695,14 @@
                             </tr>
                         `).join('');
                     } else {
-                        table.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">暂无 API Key，点击上方按钮创建</td></tr>';
+                        table.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">暂无 API Key，点击上方按钮创建</td></tr>';
                     }
                 } else {
-                    table.innerHTML = '<tr><td colspan="4" style="text-align: center;">加载失败</td></tr>';
+                    table.innerHTML = '<tr><td colspan="5" style="text-align: center;">加载失败</td></tr>';
                 }
             } catch (error) {
                 console.error('加载 API Key 失败:', error);
-                table.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #ff6b6b;">加载失败</td></tr>';
+                table.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ff6b6b;">加载失败</td></tr>';
                 showToast('加载失败', 'error');
             } finally {
                 loading.classList.remove('active');
@@ -866,12 +871,12 @@
 
                 if (data.code === 200) {
                     const stats = data.data;
-                    document.getElementById('statsMinuteUsed').textContent = stats.minuteUsed;
+                    document.getElementById('statsMinuteUsed').textContent = stats.minuteRequests;
                     document.getElementById('statsMinuteLimit').textContent = stats.minuteLimit;
-                    document.getElementById('statsMinuteRemaining').textContent = stats.minuteRemaining;
-                    document.getElementById('statsDailyUsed').textContent = stats.dailyUsed;
-                    document.getElementById('statsDailyLimit').textContent = stats.dailyLimit;
-                    document.getElementById('statsDailyRemaining').textContent = stats.dailyRemaining;
+                    document.getElementById('statsMinuteRemaining').textContent = stats.minuteLimit - stats.minuteRequests;
+                    document.getElementById('statsDailyUsed').textContent = stats.dayRequests;
+                    document.getElementById('statsDailyLimit').textContent = stats.dayLimit;
+                    document.getElementById('statsDailyRemaining').textContent = stats.dayLimit - stats.dayRequests;
                 } else {
                     showToast('加载统计失败', 'error');
                 }

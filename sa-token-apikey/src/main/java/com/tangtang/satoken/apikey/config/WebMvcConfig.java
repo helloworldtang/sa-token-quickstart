@@ -18,7 +18,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         RateLimiter ipRateLimiter,
                         ApiKeyRateLimiter apikeyRateLimiter) {
         // ★ 拦截器 new 在构造器里，手动注入依赖
-        this.apiKeyInterceptor = new ApiKeyInterceptor(apikeyTemplate, ipRateLimiter);
+        this.apiKeyInterceptor = new ApiKeyInterceptor(apikeyTemplate, ipRateLimiter, apikeyRateLimiter);
     }
 
     @Override

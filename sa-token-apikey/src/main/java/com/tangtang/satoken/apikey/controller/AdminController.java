@@ -96,6 +96,7 @@ public class AdminController {
             List<Map<String, Object>> result = list.stream().map(ak -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("apiKey", ak.getApiKey());
+                map.put("name", getApiKeyName(ak));
                 map.put("isValid", ak.getIsValid());
                 map.put("createTime", new Date(ak.getCreateTime()));
                 map.put("expiresTime", new Date(ak.getExpiresTime()));
@@ -143,5 +144,22 @@ public class AdminController {
         } catch (Exception e) {
             return Map.of("code", 401, "message", "未登录");
         }
+    }
+
+    // 辅助方法：从 ApiKeyModel 的 extraData 中获取名称
+    private String getApiKeyName(ApiKeyModel ak) {
+        try {
+            Object extraData = ak.getExtraData();
+            if (extraData instanceof Map) {
+                Map<?, ?> data = (Map<?, ?>) extraData;
+                Object name = data.get("name");
+                if (name != null) {
+                    return name.toString();
+                }
+            }
+        } catch (Exception e) {
+            // 忽略异常，返回默认值
+        }
+        return "未命名";
     }
 }

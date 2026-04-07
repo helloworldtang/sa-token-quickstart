@@ -5,6 +5,7 @@ import cn.dev33.satoken.apikey.template.SaApiKeyTemplate;
 import com.tangtang.satoken.apikey.service.ApiKeyService;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -14,6 +15,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public ApiKeyModel createApiKey(Object loginId, String name) {
         ApiKeyModel ak = apikeyTemplate.createApiKeyModel(loginId);
+        // 将名称存储到 extraData 中
+        if (name != null && !name.isEmpty()) {
+            ak.setExtraData(Map.of("name", name));
+        } else {
+            ak.setExtraData(Map.of("name", "未命名"));
+        }
         apikeyTemplate.saveApiKey(ak);  // ★ 持久化到 Redis
         return ak;
     }

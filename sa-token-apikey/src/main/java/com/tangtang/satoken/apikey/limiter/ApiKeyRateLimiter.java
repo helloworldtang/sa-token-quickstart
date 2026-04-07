@@ -48,13 +48,15 @@ public class ApiKeyRateLimiter {
         String minute = stringRedisTemplate.opsForValue().get("apikey_rate_limit:" + apiKey);
         String daily = stringRedisTemplate.opsForValue().get("apikey_daily_limit:" + apiKey);
 
-        stats.setMinuteUsed(minute != null ? Integer.parseInt(minute) : 0);
-        stats.setMinuteLimit(maxRequestsPerMinute);
-        stats.setMinuteRemaining(Math.max(0, maxRequestsPerMinute - stats.getMinuteUsed()));
+        int minuteUsed = minute != null ? Integer.parseInt(minute) : 0;
+        int dailyUsed = daily != null ? Integer.parseInt(daily) : 0;
 
-        stats.setDailyUsed(daily != null ? Integer.parseInt(daily) : 0);
-        stats.setDailyLimit(maxRequestsPerDay);
-        stats.setDailyRemaining(Math.max(0, maxRequestsPerDay - stats.getDailyUsed()));
+        stats.setTotalRequests(dailyUsed); // 总请求数使用每日计数
+        stats.setMinuteRequests(minuteUsed);
+        stats.setMinuteLimit(maxRequestsPerMinute);
+        stats.setDayRequests(dailyUsed);
+        stats.setDayLimit(maxRequestsPerDay);
+        stats.setUniqueIps(1); // 简化实现，实际应该统计不同IP数
 
         return stats;
     }
@@ -78,23 +80,27 @@ public class ApiKeyRateLimiter {
     // ===== 内部类：使用统计 =====
     public static class ApiKeyUsageStats {
         private String apiKey;
-        private int minuteUsed, minuteLimit, minuteRemaining;
-        private int dailyUsed, dailyLimit, dailyRemaining;
+        private int totalRequests;
+        private int minuteRequests;
+        private int minuteLimit;
+        private int dayRequests;
+        private int dayLimit;
+        private int uniqueIps;
 
         // getters & setters
         public String getApiKey() { return apiKey; }
         public void setApiKey(String apiKey) { this.apiKey = apiKey; }
-        public int getMinuteUsed() { return minuteUsed; }
-        public void setMinuteUsed(int minuteUsed) { this.minuteUsed = minuteUsed; }
+        public int getTotalRequests() { return totalRequests; }
+        public void setTotalRequests(int totalRequests) { this.totalRequests = totalRequests; }
+        public int getMinuteRequests() { return minuteRequests; }
+        public void setMinuteRequests(int minuteRequests) { this.minuteRequests = minuteRequests; }
         public int getMinuteLimit() { return minuteLimit; }
         public void setMinuteLimit(int minuteLimit) { this.minuteLimit = minuteLimit; }
-        public int getMinuteRemaining() { return minuteRemaining; }
-        public void setMinuteRemaining(int minuteRemaining) { this.minuteRemaining = minuteRemaining; }
-        public int getDailyUsed() { return dailyUsed; }
-        public void setDailyUsed(int dailyUsed) { this.dailyUsed = dailyUsed; }
-        public int getDailyLimit() { return dailyLimit; }
-        public void setDailyLimit(int dailyLimit) { this.dailyLimit = dailyLimit; }
-        public int getDailyRemaining() { return dailyRemaining; }
-        public void setDailyRemaining(int dailyRemaining) { this.dailyRemaining = dailyRemaining; }
+        public int getDayRequests() { return dayRequests; }
+        public void setDayRequests(int dayRequests) { this.dayRequests = dayRequests; }
+        public int getDayLimit() { return dayLimit; }
+        public void setDayLimit(int dayLimit) { this.dayLimit = dayLimit; }
+        public int getUniqueIps() { return uniqueIps; }
+        public void setUniqueIps(int uniqueIps) { this.uniqueIps = uniqueIps; }
     }
 }
