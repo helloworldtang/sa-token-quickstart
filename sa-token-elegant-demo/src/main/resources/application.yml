@@ -1,0 +1,79 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: sa-token-elegant-demo
+  # Redis配置 - 优雅实践：使用Redis分布式存储，支持多节点部署
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+
+# Sa-Token 配置 - 优雅点：配置项清晰、语义化强、开箱即用
+sa-token:
+  # Token 名称（同时也是 Cookie/Header 名称）
+  # 优雅点：命名灵活，避免与其他系统冲突
+  token-name: satoken
+  header-name: Authorization
+
+  # Token 有效期（单位：秒）默认30天，-1代表永不过期
+  # 优雅点：时间单位明确，支持负值表示永久
+  timeout: 2592000
+
+  # Token 临时有效期（指定时间内无操作就视为token过期）单位：秒
+  # 优雅点：安全特性，无操作自动过期，-1表示不启用
+  active-timeout: -1
+
+  # 是否允许同一账号并发登录（为 true 时允许一起登录，为 false 时新登录挤掉旧登录）
+  # 优雅点：灵活控制并发登录策略
+  is-concurrent: true
+
+  # 在多人登录同一账号时，是否共用一个 token
+  # 优雅点：true 时所有登录共用一个 token（单设备登录），false 时每次登录新建一个 token（多设备登录）
+  is-share: false
+
+  # Token 风格（uuid, simple-uuid, random-32, random-64, random-128, tik）
+  # 优雅点：支持多种风格，适应不同场景
+  token-style: uuid
+
+  # 是否输出操作日志
+  # 优雅点：调试友好，生产环境可关闭
+  is-log: true
+
+  # 是否在登录后将 Token 写入响应头
+  # 优雅点：前端友好，支持多种Token传递方式
+  is-write-header: true
+
+  # 是否在初始化配置时打印版本字符画
+  # 优雅点：美观，提升开发者体验
+  is-print: false
+  # 是否开启 token 搜索
+  is-search: true
+
+# Knife4j Swagger 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'elegant-demo'
+      paths-to-match: '/**'
+      packages-to-scan: com.tangtang.satoken.elegant.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

@@ -1,0 +1,25 @@
+server:
+  port: 0  # 随机端口，避免测试冲突
+
+spring:
+  application:
+    name: sa-token-elegant-demo-test
+
+# 测试环境使用内存模拟，不连接Redis
+# 实际测试中可以使用Testcontainers启动真实Redis
+
+# Sa-Token 测试配置
+sa-token:
+  token-name: Authorization
+  timeout: 2592000
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false  # 测试环境关闭日志
+  is-write-header: true
+  is-print: false
+
+# 测试环境禁用Swagger
+knife4j:
+  enable: false
