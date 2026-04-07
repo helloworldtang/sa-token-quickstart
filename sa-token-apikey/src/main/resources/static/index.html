@@ -297,6 +297,83 @@
             background: #ff6b6b;
         }
 
+        /* API Key 成功提示框样式 */
+        .apikey-success-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .apikey-success-modal.active {
+            display: flex;
+        }
+
+        .apikey-success-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .apikey-success-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .apikey-success-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .apikey-success-desc {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .apikey-success-code {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .apikey-success-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
         .loading {
             display: none;
             text-align: center;
@@ -396,6 +473,23 @@
                 <div class="card-header">
                     <h2 class="card-title">📋 我的 API Key</h2>
                     <button class="btn btn-primary" onclick="openCreateModal()">+ 创建 API Key</button>
+                </div>
+
+                <!-- API Key 成功提示框 -->
+                <div id="apikeySuccessModal" class="apikey-success-modal">
+                    <div class="apikey-success-content">
+                        <div class="apikey-success-icon">✅</div>
+                        <div class="apikey-success-title">API Key 创建成功</div>
+                        <div class="apikey-success-desc">您的 API Key 已生成</div>
+                        <div class="apikey-success-code">
+                            <code id="apikeySuccessCode"></code>
+                        </div>
+                        <div class="apikey-success-actions">
+                            <button class="btn btn-success" onclick="copyApiKeyFromModal()">📋 复制</button>
+                            <button class="btn" onclick="closeApiKeySuccessModal()">关闭</button>
+                        </div>
+                        <div class="apikey-success-desc">请立即复制保存，刷新页面后不再显示完整 Key</div>
+                    </div>
                 </div>
 
                 <div class="loading" id="loading">
@@ -645,9 +739,12 @@
 
                 if (data.code === 200) {
                     const fullApiKey = data.data.apiKey;
-                    // 保存完整的 API Key 到 localStorage，用于复制功能
+                    // 保存完整的 API Key 到 localStorage
                     localStorage.setItem(`fullApiKey_${fullApiKey}`, fullApiKey);
-                    showToast(`API Key 创建成功：${data.data.apiKey}`, 'success');
+
+                    // 显示持久化的成功提示框
+                    showApiKeySuccessModal(fullApiKey);
+
                     closeCreateModal();
                     loadApiKeys();
                 } else {
@@ -659,7 +756,52 @@
             }
         }
 
-        // 复制 API Key
+        // 显示 API Key 成功提示框
+        let autoCloseTimer = null;
+
+        function showApiKeySuccessModal(apiKey) {
+            const modal = document.getElementById('apikeySuccessModal');
+            const codeElement = document.getElementById('apikeySuccessCode');
+
+            modal.classList.add('active');
+            codeElement.textContent = apiKey;
+
+            // 自动关闭提示框（10 秒后自动消失）
+            if (autoCloseTimer) {
+                clearTimeout(autoCloseTimer);
+            }
+
+            autoCloseTimer = setTimeout(() => {
+                closeApiKeySuccessModal();
+            }, 10000); // 10 秒后自动关闭
+        }
+
+        // 关闭 API Key 成功提示框
+        function closeApiKeySuccessModal() {
+            const modal = document.getElementById('apikeySuccessModal');
+            modal.classList.remove('active');
+
+            if (autoCloseTimer) {
+                clearTimeout(autoCloseTimer);
+                autoCloseTimer = null;
+            }
+        }
+
+        // 从提示框中复制 API Key
+        function copyApiKeyFromModal() {
+            const codeElement = document.getElementById('apikeySuccessCode');
+            const apiKey = codeElement.textContent;
+
+            if (apiKey) {
+                navigator.clipboard.writeText(apiKey).then(() => {
+                    showToast('API Key 已复制到剪贴板', 'success');
+                }).catch(err => {
+                    showToast('复制失败', 'error');
+                });
+            }
+        }
+
+        // 复制 API Key（从列表中）
         function copyApiKey(apiKey) {
             // 先找到完整的 API Key（从 localStorage 或从隐藏的存储中）
             const fullApiKey = localStorage.getItem(`fullApiKey_${apiKey}`);
