@@ -422,6 +422,32 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- 测试示例 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">🧪 API 测试示例</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 16px; color: #666;">使用以下命令测试您的 API Key：</p>
+
+                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace;">
+                        <div style="color: #667eea; font-weight: 500; margin-bottom: 8px;"># 1. 聊天接口</div>
+                        <code style="display: block; padding: 8px; word-break: break-all;">curl -X POST http://localhost:8082/api/v1/chat \<br>
+  -H "Authorization: sk-你的API-KEY" \<br>
+  -H "Content-Type: application/json" \<br>
+  -d '{"message": "你好"}'</code>
+
+                        <div style="color: #667eea; font-weight: 500; margin: 16px 0;"># 2. 模型列表</div>
+                        <code style="display: block; padding: 8px; word-break: break-all;">curl -X GET http://localhost:8082/api/v1/models \<br>
+  -H "Authorization: sk-你的API-KEY"</code>
+
+                        <div style="color: #667eea; font-weight: 500; margin: 16px 0;"># 3. 服务状态</div>
+                        <code style="display: block; padding: 8px; word-break: break-all;">curl -X GET http://localhost:8082/api/v1/status \<br>
+  -H "Authorization: sk-你的API-KEY"</code>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -564,6 +590,7 @@
                                 <td style="font-size: 14px;">${formatDate(key.expiresTime)}</td>
                                 <td style="text-align: right; white-space: nowrap;">
                                     <button class="btn btn-sm btn-success" onclick="showStats('${key.apiKey}')">📊</button>
+                                    <button class="btn btn-sm" onclick="copyApiKey('${key.apiKey}')">📋</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteApiKey('${key.apiKey}')">删除</button>
                                 </td>
                             </tr>
@@ -617,6 +644,9 @@
                 const data = await response.json();
 
                 if (data.code === 200) {
+                    const fullApiKey = data.data.apiKey;
+                    // 保存完整的 API Key 到 localStorage，用于复制功能
+                    localStorage.setItem(`fullApiKey_${fullApiKey}`, fullApiKey);
                     showToast(`API Key 创建成功：${data.data.apiKey}`, 'success');
                     closeCreateModal();
                     loadApiKeys();
@@ -626,6 +656,22 @@
             } catch (error) {
                 console.error('创建 API Key 失败:', error);
                 showToast('网络错误，请稍后重试', 'error');
+            }
+        }
+
+        // 复制 API Key
+        function copyApiKey(apiKey) {
+            // 先找到完整的 API Key（从 localStorage 或从隐藏的存储中）
+            const fullApiKey = localStorage.getItem(`fullApiKey_${apiKey}`);
+
+            if (fullApiKey) {
+                navigator.clipboard.writeText(fullApiKey).then(() => {
+                    showToast('API Key 已复制到剪贴板', 'success');
+                }).catch(err => {
+                    showToast('复制失败', 'error');
+                });
+            } else {
+                showToast('API Key 仅在创建时显示完整值，请删除后重新创建', 'error');
             }
         }
 
@@ -647,6 +693,8 @@
 
                 if (data.code === 200) {
                     showToast('API Key 删除成功', 'success');
+                    // 清除 localStorage 中保存的完整 Key
+                    localStorage.removeItem(`fullApiKey_${apiKey}`);
                     loadApiKeys();
                 } else {
                     showToast(data.message || '删除失败', 'error');
