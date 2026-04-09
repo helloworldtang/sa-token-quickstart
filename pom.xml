@@ -25,6 +25,7 @@
         <module>sa-token-basic</module>
         <module>sa-token-elegant-demo</module>
         <module>sa-token-apikey</module>
+        <module>sa-token-apisign</module>
     </modules>
 
     <properties>

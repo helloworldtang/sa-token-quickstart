@@ -9,6 +9,7 @@ sa-token-quickstart/
 ├── sa-token-basic/          # 基础示例模块
 ├── sa-token-elegant-demo/   # 优雅实践模块
 ├── sa-token-apikey/         # API Key 管理模块
+├── sa-token-apisign/        # API 接口参数签名模块
 └── pom.xml                  # 父POM
 ```
 
@@ -49,6 +50,20 @@ sa-token-quickstart/
   - Web 管理后台
   - Redis 持久化
 - **详细文档**: [sa-token-apikey/README.md](sa-token-apikey/README.md)
+
+### sa-token-apisign
+- **定位**: API 接口参数签名模块
+- **端口**: 8083
+- **特点**: 基于 Sa-Token Sign 插件，防止参数篡改和重放攻击
+- **签名帮助**: http://localhost:8083/sign/help
+- **API 文档**: http://localhost:8083/doc.html
+- **包含**:
+  - API 接口参数签名校验（一行代码完成）
+  - 签名生成帮助接口（方便理解和使用）
+  - 模拟转账业务接口
+  - 完整的签名生成工具类
+  - 单元测试示例
+- **详细文档**: [sa-token-apisign/README.md](sa-token-apisign/README.md)
 
 ## 技术栈
 
@@ -130,6 +145,17 @@ mvn spring-boot:run
 
 详细使用说明请参考 [sa-token-apikey/README.md](sa-token-apikey/README.md)
 
+#### 启动 API 接口参数签名模块
+
+```bash
+cd sa-token-apisign
+mvn spring-boot:run
+```
+
+访问: http://localhost:8083/sign/help
+
+详细使用说明请参考 [sa-token-apisign/README.md](sa-token-apisign/README.md)
+
 ## 学习路径
 
 ### 1. 从基础开始
@@ -150,6 +176,13 @@ mvn spring-boot:run
 3. 了解 API Key 认证机制
 4. 学习双重限流实现
 5. 查看使用统计功能
+
+### 4. API 接口参数签名
+1. 启动 sa-token-apisign 模块
+2. 访问签名帮助接口了解签名生成过程
+3. 学习签名校验的使用方法
+4. 理解如何防止参数篡改和重放攻击
+5. 查看单元测试，了解测试方法
 
 ## 优雅实践亮点
 

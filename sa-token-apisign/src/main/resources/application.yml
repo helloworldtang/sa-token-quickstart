@@ -1,0 +1,37 @@
+server:
+  port: 8083
+
+sa-token:
+  sign:
+    # API 接口签名密钥（生产环境应通过配置中心管理，不硬编码）
+    secret-key: tangcheng-sa-token-apisign-secret-2026
+    # 是否校验 nonce（防重放，默认 true）
+    is-check-nonce: true
+    # 时间戳允许误差，单位毫秒，默认 15 分钟
+    timestamp-disparity: 900000
+
+spring:
+  application:
+    name: sa-token-apisign
+
+# Knife4j Swagger 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.tangtang.apisign.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+logging:
+  level:
+    com.tangtang.apisign: DEBUG
