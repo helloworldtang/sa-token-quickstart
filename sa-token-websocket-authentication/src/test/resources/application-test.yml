@@ -1,0 +1,34 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: sa-token-websocket-authentication-test
+  # 使用内存存储，方便测试
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+# Sa-Token 配置
+sa-token:
+  token-name: satoken
+  timeout: 2592000
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: false
+
+# WebSocket 配置
+websocket:
+  enabled: true
+  path: /ws
+  auth-timeout: 30
+
+# 禁用 Knife4j（测试环境）
+springdoc:
+  swagger-ui:
+    enabled: false
+
+knife4j:
+  enable: false

@@ -6,11 +6,12 @@
 
 ```
 sa-token-quickstart/
-├── sa-token-basic/          # 基础示例模块
-├── sa-token-elegant-demo/   # 优雅实践模块
-├── sa-token-apikey/         # API Key 管理模块
-├── sa-token-apisign/        # API 接口参数签名模块
-└── pom.xml                  # 父POM
+├── sa-token-basic/                     # 基础示例模块
+├── sa-token-elegant-demo/              # 优雅实践模块
+├── sa-token-apikey/                    # API Key 管理模块
+├── sa-token-apisign/                   # API 接口参数签名模块
+├── sa-token-websocket-authentication/  # WebSocket 鉴权模块
+└── pom.xml                             # 父POM
 ```
 
 ## 模块说明
@@ -64,6 +65,20 @@ sa-token-quickstart/
   - 完整的签名生成工具类
   - 单元测试示例
 - **详细文档**: [sa-token-apisign/README.md](sa-token-apisign/README.md)
+
+### sa-token-websocket-authentication
+- **定位**: WebSocket 鉴权模块
+- **端口**: 8084
+- **特点**: 基于 Sa-Token + Spring WebSocket 的完整鉴权方案
+- **API 文档**: http://localhost:8084/doc.html
+- **包含**:
+  - WebSocket 握手时 Token 验证（HandshakeInterceptor）
+  - 支持 3 种 Token 传递方式（URL 参数、Header、Authorization）
+  - 在线用户管理
+  - 消息广播和私聊功能
+  - 完整的集成测试（13 个用例）
+  - 登出后 Token 失效验证
+- **详细文档**: [sa-token-websocket-authentication/README.md](sa-token-websocket-authentication/README.md)
 
 ## 技术栈
 

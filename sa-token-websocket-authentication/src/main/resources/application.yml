@@ -1,0 +1,51 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: sa-token-websocket-authentication
+  # Redis 配置（用于 Sa-Token 分布式 Session）
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+
+# Sa-Token 配置
+sa-token:
+  # Token 名称
+  token-name: satoken
+  # Token 有效期（单位：秒）默认30天
+  timeout: 2592000
+  # 是否允许同一账号并发登录
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token
+  is-share: true
+  # Token 风格
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
+
+# WebSocket 配置
+websocket:
+  # 是否启用 WebSocket
+  enabled: true
+  # WebSocket 路径
+  path: /ws
+  # 认证超时时间（秒）
+  auth-timeout: 30
+
+# Knife4j Swagger 配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.tangtang.satoken.websocket.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
