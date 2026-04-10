@@ -2,6 +2,7 @@ package com.tangtang.satoken.websocket;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Sa-Token + WebSocket 鉴权示例启动类
@@ -11,10 +12,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - WebSocket 连接鉴权（首次连接需要携带 Token）
  * - 消息广播（已认证用户可发送消息）
  * - 在线用户管理
+ * - 心跳检测和连接清理
  *
  * @author 码骨丹心
  */
 @SpringBootApplication
+@EnableScheduling
 public class SaTokenWebSocketApplication {
 
     public static void main(String[] args) {

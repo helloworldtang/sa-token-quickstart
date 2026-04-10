@@ -1,19 +1,29 @@
 package com.tangtang.satoken.websocket.handler;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tangtang.satoken.websocket.config.WebSocketProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import org.springframework.beans.factory.InitializingBean;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * WebSocket 消息处理器
@@ -26,9 +36,24 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 码骨丹心
  */
 @Component
-public class AuthWebSocketHandler extends TextWebSocketHandler {
+public class AuthWebSocketHandler extends TextWebSocketHandler implements InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(AuthWebSocketHandler.class);
+
+    @Autowired
+    private WebSocketProperties webSocketProperties;
+
+    private long connectionTimeout;
+    private long broadcastTimeout;
+
+    /**
+     * 异步消息发送线程池
+     */
+    private final ExecutorService messageExecutor = Executors.newCachedThreadPool(r -> {
+        Thread thread = new Thread(r, "websocket-message-sender");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     /**
      * 在线会话存储
@@ -39,7 +64,27 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
      */
     private final Map<Object, WebSocketSession> onlineSessions = new ConcurrentHashMap<>();
 
+    /**
+     * 连接最后活跃时间
+     * key: loginId
+     * value: 最后活跃时间戳（毫秒）
+     */
+    private final Map<Object, Long> lastActiveTime = new ConcurrentHashMap<>();
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 初始化配置参数
+     */
+    @Override
+    public void afterPropertiesSet() {
+        this.connectionTimeout = webSocketProperties.getConnectionTimeout() * 1000L;
+        this.broadcastTimeout = webSocketProperties.getBroadcastTimeout();
+        log.info("[WebSocket] 配置加载完成: 连接超时={}秒, 广播超时={}毫秒, 最大连接数={}",
+                webSocketProperties.getConnectionTimeout(),
+                webSocketProperties.getBroadcastTimeout(),
+                webSocketProperties.getMaxConnections());
+    }
 
     // ==================== 生命周期回调 ====================
 
@@ -52,6 +97,7 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
         Object loginId = session.getAttributes().get("loginId");
         if (loginId != null) {
             onlineSessions.put(loginId, session);
+            lastActiveTime.put(loginId, System.currentTimeMillis());
             log.info("[WebSocket] 用户 {} 已连接，当前在线: {} 人", loginId, onlineSessions.size());
 
             // 发送欢迎消息
@@ -71,6 +117,13 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
+        // 验证 token 是否仍然有效
+        if (!isTokenValid(session)) {
+            sendMessage(session, buildMessage("error", "Token过期", "请重新登录", null));
+            session.close();
+            return;
+        }
+
         String payload = message.getPayload();
         log.debug("[WebSocket] 收到用户 {} 的消息: {}", loginId, payload);
 
@@ -78,6 +131,9 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
             // 解析消息
             Map<String, Object> msgData = objectMapper.readValue(payload, Map.class);
             String type = (String) msgData.getOrDefault("type", "unknown");
+
+            // 更新最后活跃时间
+            lastActiveTime.put(loginId, System.currentTimeMillis());
 
             switch (type) {
                 case "ping":
@@ -120,6 +176,7 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
         Object loginId = session.getAttributes().get("loginId");
         if (loginId != null) {
             onlineSessions.remove(loginId);
+            lastActiveTime.remove(loginId);
             log.info("[WebSocket] 用户 {} 已断开连接 ({}), 当前在线: {} 人",
                     loginId, status, onlineSessions.size());
         }
@@ -138,7 +195,7 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
     // ==================== 消息发送方法 ====================
 
     /**
-     * 发送消息给指定会话
+     * 发送消息给指定会话（同步）
      */
     public void sendMessage(WebSocketSession session, Map<String, Object> message) {
         if (session != null && session.isOpen()) {
@@ -152,6 +209,24 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
+     * 异步发送消息给指定会话
+     */
+    public CompletableFuture<Void> sendMessageAsync(WebSocketSession session, Map<String, Object> message) {
+        if (session == null || !session.isOpen()) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        return CompletableFuture.runAsync(() -> {
+            try {
+                String json = objectMapper.writeValueAsString(message);
+                session.sendMessage(new TextMessage(json));
+            } catch (IOException e) {
+                log.error("[WebSocket] 异步发送消息失败: {}", e.getMessage());
+            }
+        }, messageExecutor);
+    }
+
+    /**
      * 发送消息给指定用户
      */
     public void sendToUser(Object loginId, Map<String, Object> message) {
@@ -160,17 +235,37 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * 广播消息给所有在线用户
+     * 广播消息给所有在线用户（异步并行）
      */
     public void broadcast(Object senderId, String content) {
         Map<String, Object> message = buildMessage("broadcast", "广播消息",
                 "[" + senderId + "]: " + content, senderId);
 
-        for (Map.Entry<Object, WebSocketSession> entry : onlineSessions.entrySet()) {
-            sendMessage(entry.getValue(), message);
-        }
+        // 使用 CompletableFuture 并行发送
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
 
-        log.info("[WebSocket] 用户 {} 发送广播: {}", senderId, content);
+        onlineSessions.values().stream()
+                .filter(session -> session != null && session.isOpen())
+                .map(session -> sendMessageAsync(session, message)
+                        .handle((result, ex) -> {
+                            if (ex != null) {
+                                failCount.incrementAndGet();
+                            } else {
+                                successCount.incrementAndGet();
+                            }
+                            return result;
+                        }))
+                .forEach(future -> {
+                    try {
+                        future.get(broadcastTimeout, TimeUnit.MILLISECONDS);
+                    } catch (Exception e) {
+                        log.warn("[WebSocket] 广播发送超时: {}", e.getMessage());
+                    }
+                });
+
+        log.info("[WebSocket] 用户 {} 发送广播: {}, 成功: {}, 失败: {}",
+                senderId, content, successCount.get(), failCount.get());
     }
 
     /**
@@ -231,5 +326,85 @@ public class AuthWebSocketHandler extends TextWebSocketHandler {
      */
     public boolean isUserOnline(Object loginId) {
         return onlineSessions.containsKey(loginId);
+    }
+
+    // ==================== Token 验证方法 ====================
+
+    /**
+     * 验证 WebSocket 连接关联的 token 是否仍然有效
+     *
+     * @param session WebSocket 会话
+     * @return true 表示 token 有效，false 表示 token 已过期
+     */
+    private boolean isTokenValid(WebSocketSession session) {
+        String token = (String) session.getAttributes().get("token");
+        if (token == null || token.isEmpty()) {
+            return false;
+        }
+
+        try {
+            StpUtil.getLoginIdByToken(token);
+            return true;
+        } catch (NotLoginException e) {
+            log.warn("[WebSocket] Token 已过期: loginId={}, token={}",
+                    session.getAttributes().get("loginId"), token);
+            return false;
+        }
+    }
+
+    // ==================== 心跳和连接清理 ====================
+
+    /**
+     * 定时清理无效连接
+     * 每 30 秒执行一次
+     */
+    @Scheduled(fixedRate = 30000)
+    public void cleanInactiveConnections() {
+        long currentTime = System.currentTimeMillis();
+        AtomicInteger cleanedCount = new AtomicInteger(0);
+
+        onlineSessions.entrySet().removeIf(entry -> {
+            Object loginId = entry.getKey();
+            WebSocketSession session = entry.getValue();
+
+            // 检查连接是否超时
+            Long lastActive = lastActiveTime.get(loginId);
+            boolean isTimeout = lastActive != null && (currentTime - lastActive) > connectionTimeout;
+
+            // 检查连接是否已关闭
+            boolean isClosed = session == null || !session.isOpen();
+
+            if (isTimeout || isClosed) {
+                log.warn("[WebSocket] 清理无效连接: loginId={}, 原因: {}",
+                        loginId, isTimeout ? "超时" : "已关闭");
+                lastActiveTime.remove(loginId);
+                cleanedCount.incrementAndGet();
+                return true;
+            }
+            return false;
+        });
+
+        if (cleanedCount.get() > 0) {
+            log.info("[WebSocket] 定时清理完成，清理了 {} 个无效连接，当前在线: {} 人",
+                    cleanedCount.get(), onlineSessions.size());
+        }
+    }
+
+    /**
+     * 设置连接超时时间
+     *
+     * @param timeout 超时时间（毫秒）
+     */
+    public void setConnectionTimeout(long timeout) {
+        this.connectionTimeout = timeout;
+    }
+
+    /**
+     * 设置广播超时时间
+     *
+     * @param timeout 超时时间（毫秒）
+     */
+    public void setBroadcastTimeout(long timeout) {
+        this.broadcastTimeout = timeout;
     }
 }

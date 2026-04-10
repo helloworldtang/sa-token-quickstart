@@ -33,6 +33,16 @@ websocket:
   path: /ws
   # 认证超时时间（秒）
   auth-timeout: 30
+  # 心跳间隔（秒）- 定时检查连接状态的间隔
+  heart-beat-interval: 30
+  # 连接超时时间（秒）- 无活动连接超时时间
+  connection-timeout: 120
+  # 最大连接数（生产环境建议根据服务器配置调整）
+  max-connections: 10000
+  # 广播超时时间（毫秒）- 广播消息的最长等待时间
+  broadcast-timeout: 5000
+  # 是否启用异步消息发送（推荐启用以提升性能）
+  async-enabled: true
 
 # Knife4j Swagger 配置
 springdoc:

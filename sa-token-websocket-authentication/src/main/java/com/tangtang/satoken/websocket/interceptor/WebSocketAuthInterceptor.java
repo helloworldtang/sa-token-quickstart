@@ -2,6 +2,8 @@ package com.tangtang.satoken.websocket.interceptor;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -32,6 +34,8 @@ import java.util.Map;
 @Component
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
+    private static final Logger log = LoggerFactory.getLogger(WebSocketAuthInterceptor.class);
+
     @Value("${sa-token.token-name:satoken}")
     private String tokenName;
 
@@ -50,7 +54,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         String token = getToken(request);
 
         if (token == null || token.isEmpty()) {
-            System.out.println("[WebSocket] 握手失败: 未提供 Token");
+            log.warn("[WebSocket] 握手失败: 未提供 Token");
             response.getBody().write("{\"code\":401,\"msg\":\"请先登录获取 Token\"}".getBytes());
             return false;
         }
@@ -67,12 +71,12 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             attributes.put("loginId", loginId);
             attributes.put("token", token);
 
-            System.out.println("[WebSocket] 握手成功: 用户 " + loginId + " 建立连接");
+            log.info("[WebSocket] 握手成功: 用户 {} 建立连接", loginId);
             return true;
 
         } catch (NotLoginException e) {
             // Token 无效或已过期
-            System.out.println("[WebSocket] 握手失败: Token 无效 - " + e.getMessage());
+            log.warn("[WebSocket] 握手失败: Token 无效 - {}", e.getMessage());
             response.getBody().write("{\"code\":401,\"msg\":\"Token 无效或已过期\"}".getBytes());
             return false;
         }
@@ -87,7 +91,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                                WebSocketHandler wsHandler,
                                Exception exception) {
         if (exception != null) {
-            System.out.println("[WebSocket] 握手异常: " + exception.getMessage());
+            log.error("[WebSocket] 握手异常: {}", exception.getMessage());
         }
     }
 
