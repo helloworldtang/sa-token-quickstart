@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sa-Token 全链路统一权限架构图</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* ── 导出按钮 ── */
+  #save-btn {
+    margin-bottom: 16px;
+    padding: 10px 28px;
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #save-btn:hover { background: #388bfd; }
+
+  /* ── 图纸容器 ── */
+  #diagram {
+    width: 1200px;
+    height: 720px;
+    background: #0d1117;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── SVG 连线层 ── */
+  #diagram svg.lines {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── 通用卡片样式 ── */
+  .card {
+    position: absolute;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  /* ── 标题区 ── */
+  .title-area {
+    position: absolute;
+    top: 20px; left: 0; right: 0;
+    text-align: center;
+    z-index: 2;
+  }
+  .title-area h1 {
+    color: #e6edf3;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .title-area p {
+    color: #8b949e;
+    font-size: 13px;
+    margin-top: 5px;
+  }
+
+  /* ── 节点样式 ── */
+  .card-client {
+    top: 110px; left: 510px;
+    width: 180px; height: 62px;
+    background: #1a2332;
+    border-color: #58a6ff;
+  }
+  .card-client .card-title { color: #58a6ff; font-size: 14px; font-weight: 700; }
+  .card-client .card-line  { color: #8b949e; font-size: 10px; margin-top: 4px; }
+
+  /* 网关 */
+  .card-gateway {
+    top: 215px; left: 460px;
+    width: 280px; height: 118px;
+    background: #0d1b2e;
+    border-color: #1f6feb;
+  }
+  .card-gateway .card-title { color: #58a6ff; font-size: 14px; font-weight: 700; }
+  .card-gateway .card-line  { color: #8b949e; font-size: 11px; margin-top: 3px; }
+
+  /* 服务通用 */
+  .card-service {
+    width: 195px; height: 110px;
+    border-color: #238636;
+    background: #0d2318;
+  }
+  .card-user   { top: 398px; left: 40px; }
+  .card-auth   { top: 398px; left: 503px; border-color: #6e40c9; background: #1a0d2e; }
+  .card-order  { top: 398px; left: 965px; }
+
+  .card-service .card-title { font-size: 13px; font-weight: 700; }
+  .card-service .card-line  { color: #8b949e; font-size: 11px; margin-top: 2px; }
+  .card-auth .card-title    { color: #d2a8ff; }
+
+  /* Redis */
+  .card-redis {
+    top: 552px; left: 450px;
+    width: 300px; height: 72px;
+    background: #2d0d0d;
+    border-color: #da3633;
+  }
+  .card-redis .card-title { color: #f78166; font-size: 14px; font-weight: 700; }
+  .card-redis .card-line  { color: #8b949e; font-size: 11px; margin-top: 2px; }
+
+  /* Tag 标签 */
+  .tag {
+    position: absolute;
+    top: 7px; left: 8px;
+    font-size: 9px;
+    color: #fff;
+    background: #1f6feb;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .card-gateway .tag { background: #1f6feb; }
+  .card-redis .tag   { background: #da3633; }
+
+  /* 右侧技术栈 */
+  .card-stack {
+    top: 215px; left: 990px;
+    width: 170px; height: 295px;
+    border-color: #30363d;
+    background: #161b22;
+    padding: 14px;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .card-stack .card-title { color: #e6edf3; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .card-stack .row { display: flex; justify-content: space-between; width: 100%; margin-bottom: 5px; }
+  .card-stack .key { color: #8b949e; font-size: 11px; }
+  .card-stack .val { color: #3fb950; font-size: 11px; }
+
+  /* 认证流程区 */
+  .flow-box {
+    position: absolute;
+    top: 542px; left: 40px;
+    width: 390px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    z-index: 2;
+  }
+  .flow-box h3 { color: #e6edf3; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .flow-box ol { padding-left: 18px; }
+  .flow-box li { color: #8b949e; font-size: 10.5px; line-height: 1.8; }
+
+  /* 图例 */
+  .legend-box {
+    position: absolute;
+    bottom: 22px; right: 30px;
+    z-index: 2;
+    display: flex; gap: 18px;
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8b949e; }
+  .legend-dot  { width: 12px; height: 12px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<button id="save-btn">📥 保存为 PNG 图片</button>
+
+<div id="diagram">
+
+  <!-- SVG 连线层 -->
+  <svg class="lines" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+    <!-- 客户端 → 网关 -->
+    <line x1="600" y1="172" x2="600" y2="215" stroke="#58a6ff" stroke-width="2"/>
+    <polygon points="600,215 594,205 606,205" fill="#58a6ff"/>
+    <text x="615" y="196" fill="#8b949e" font-size="10">① 携带 Token 请求</text>
+
+    <!-- 网关 → User Service -->
+    <line x1="460" y1="333" x2="137" y2="398" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <polygon points="137,398 131,390 143,390" fill="#58a6ff"/>
+    <text x="220" y="362" fill="#8b949e" font-size="10">路由 → 用户服务</text>
+
+    <!-- 网关 → Auth Service -->
+    <line x1="600" y1="333" x2="600" y2="398" stroke="#6e40c9" stroke-width="1.5"/>
+    <polygon points="600,398 594,390 606,390" fill="#6e40c9"/>
+    <text x="615" y="368" fill="#8b949e" font-size="10">路由 → 鉴权服务</text>
+
+    <!-- 网关 → Order Service -->
+    <line x1="740" y1="333" x2="1062" y2="398" stroke="#238636" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <polygon points="1062,398 1056,390 1068,390" fill="#238636"/>
+    <text x="860" y="362" fill="#8b949e" font-size="10">路由 → 订单服务</text>
+
+    <!-- 服务 → Redis -->
+    <line x1="137" y1="508" x2="520" y2="552" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="600" y1="508" x2="600" y2="552" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="1062" y1="508" x2="680" y2="552" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="360" y="526" fill="#8b949e" font-size="10">Session 存储 / 读取</text>
+  </svg>
+
+  <!-- 标题 -->
+  <div class="title-area">
+    <h1>Sa-Token 全链路统一权限架构</h1>
+    <p>Spring Cloud Gateway + Redis 分布式 Session + 微服务鉴权</p>
+  </div>
+
+  <!-- 客户端 -->
+  <div class="card card-client">
+    <div class="card-title">🌐 客户端</div>
+    <div class="card-line">&gt;&gt;&gt; satoken=xxx-xxx-xxx</div>
+  </div>
+
+  <!-- 网关 -->
+  <div class="card card-gateway">
+    <span class="tag">GATEWAY</span>
+    <div class="card-title">☁️ Spring Cloud Gateway (8080)</div>
+    <div class="card-line">Sa-Token Reactor Filter</div>
+    <div class="card-line">Token 读取 → Redis 验证</div>
+    <div class="card-line">未登录 → 401 &nbsp;|&nbsp; 有效 → 放行</div>
+  </div>
+
+  <!-- User Service -->
+  <div class="card card-service card-user">
+    <span class="tag">8081</span>
+    <div class="card-title">👤 User Service (8081)</div>
+    <div class="card-line">StpInterfaceImpl</div>
+    <div class="card-line">登录 / 获取用户信息</div>
+    <div class="card-line">@SaCheckLogin / Permission</div>
+  </div>
+
+  <!-- Auth Service -->
+  <div class="card card-service card-auth">
+    <span class="tag">8083</span>
+    <div class="card-title">🔐 Auth Service (8083)</div>
+    <div class="card-line">统一鉴权接口</div>
+    <div class="card-line">StpUtil.login()</div>
+    <div class="card-line">Token 校验 / API Key</div>
+  </div>
+
+  <!-- Order Service -->
+  <div class="card card-service card-order">
+    <span class="tag">8082</span>
+    <div class="card-title">📦 Order Service (8082)</div>
+    <div class="card-line">业务逻辑</div>
+    <div class="card-line">@SaCheckPermission</div>
+    <div class="card-line">"order:create"</div>
+  </div>
+
+  <!-- Redis -->
+  <div class="card card-redis">
+    <span class="tag">STORAGE</span>
+    <div class="card-title">🟥 Redis (6379)</div>
+    <div class="card-line">satoken:login:session:10001 → {userId, role, permissions}</div>
+    <div class="card-line">Token 存储 &nbsp;|&nbsp; 分布式 Session &nbsp;|&nbsp; 限流计数</div>
+  </div>
+
+  <!-- 右侧技术栈 -->
+  <div class="card card-stack">
+    <div class="card-title">🛠 技术栈</div>
+    <div class="row"><span class="key">Spring Boot</span><span class="val">3.3.0</span></div>
+    <div class="row"><span class="key">Spring Cloud</span><span class="val">2023.0.3</span></div>
+    <div class="row"><span class="key">Sa-Token</span><span class="val">1.45.0</span></div>
+    <div class="row"><span class="key">Redis</span><span class="val">最新</span></div>
+    <div class="row"><span class="key">JDK</span><span class="val">17+</span></div>
+    <div class="row"><span class="key">MyBatis Plus</span><span class="val">3.5.5</span></div>
+  </div>
+
+  <!-- 认证流程 -->
+  <div class="flow-box">
+    <h3>📌 认证流程</h3>
+    <ol>
+      <li>客户端携带 <code style="color:#58a6ff">satoken</code> header 发起请求</li>
+      <li>Gateway SaReactorFilter 读取 Token，查询 Redis 验证有效性</li>
+      <li>Token 有效 → 路由到下游服务；无效 → 返回 401</li>
+      <li>业务服务通过 <code style="color:#3fb950">@SaCheckPermission</code> 注解进行权限校验</li>
+    </ol>
+  </div>
+
+  <!-- 图例 -->
+  <div class="legend-box">
+    <div class="legend-item"><div class="legend-dot" style="background:#1f6feb"></div>API 网关</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#238636"></div>业务服务</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6e40c9"></div>鉴权服务</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#da3633"></div>存储层</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>数据流向</div>
+  </div>
+
+</div><!-- #diagram -->
+
+<script>
+document.getElementById('save-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '⏳ 生成中...';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(document.getElementById('diagram'), {
+      backgroundColor: '#0d1117',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const link = document.createElement('a');
+    link.download = 'sa-token-gateway-auth.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    btn.textContent = '✅ 已保存！';
+    setTimeout(() => {
+      btn.textContent = '📥 保存为 PNG 图片';
+      btn.disabled = false;
+    }, 2500);
+  } catch (e) {
+    alert('生成失败：' + e);
+    btn.textContent = '📥 保存为 PNG 图片';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
