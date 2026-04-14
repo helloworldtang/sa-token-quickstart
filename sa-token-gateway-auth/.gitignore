@@ -1,0 +1,50 @@
+# Maven构建产物
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE配置
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*.project
+*.settings
+.classpath
+.factorypath
+
+# Claude Code 配置（本地工具配置，不提交）
+.claude/
+
+# 操作系统文件
+.DS_Store
+.DS_Store?
+.Trashes
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# 日志文件
+*.log
+logs/
+
+# 其他编译产物
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.swp

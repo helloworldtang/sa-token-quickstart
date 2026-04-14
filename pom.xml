@@ -27,6 +27,7 @@
         <module>sa-token-apikey</module>
         <module>sa-token-apisign</module>
         <module>sa-token-websocket-authentication</module>
+        <module>sa-token-gateway-auth</module>
     </modules>
 
     <properties>
@@ -59,6 +60,13 @@
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-redis-jackson</artifactId>
+                <version>${sa-token.version}</version>
+            </dependency>
+
+            <!-- Sa-Token Reactor (网关专用) -->
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-reactor-spring-boot3-starter</artifactId>
                 <version>${sa-token.version}</version>
             </dependency>
 

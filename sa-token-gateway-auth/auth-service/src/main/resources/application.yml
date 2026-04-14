@@ -1,0 +1,65 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: auth-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/sa_token_demo?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: root
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Sa-Token 配置
+sa-token:
+  token-name: satoken
+  timeout: 86400
+  active-timeout: 3600
+  is-concurrent: true
+  is-share: true
+  max-login-count: 10
+  token-style: uuid
+  is-log: true
+
+# 签名配置
+sign:
+  # 签名有效期（秒）
+  expire-time: 300
+  # 时间戳允许偏差（秒，防止时间不同步）
+  time-tolerance: 60
+
+# Knife4j 配置
+knife4j:
+  enable: true
+  openapi:
+    title: 统一权限中心 API
+    description: Sa-Token 全场景统一权限架构核心服务
+    version: 1.0.0
+    contact:
+      name: tangtang
+    license:
+      name: Apache 2.0
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.tangtang: DEBUG
+    cn.dev33: DEBUG

@@ -1,0 +1,28 @@
+server:
+  port: 0 # 随机端口，避免端口冲突
+
+spring:
+  application:
+    name: gateway-service-test
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 2 # 使用不同的数据库避免影响生产数据
+
+# Sa-Token 配置（测试环境）
+sa-token:
+  token-name: satoken
+  timeout: 7200
+  active-timeout: 1800
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false # 测试环境关闭日志
+
+# 日志配置
+logging:
+  level:
+    root: WARN
+    com.tangtang: DEBUG
+    cn.dev33: WARN

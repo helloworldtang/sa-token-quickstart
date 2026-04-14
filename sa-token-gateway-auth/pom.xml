@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.tangtang</groupId>
+        <artifactId>sa-token-quickstart</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>sa-token-gateway-auth</artifactId>
+    <packaging>pom</packaging>
+    <name>sa-token-gateway-auth</name>
+    <description>Sa-Token 微服务网关鉴权示例</description>
+
+    <modules>
+        <module>auth-service</module>
+        <module>gateway-service</module>
+        <module>user-service</module>
+        <module>order-service</module>
+    </modules>
+
+</project>
